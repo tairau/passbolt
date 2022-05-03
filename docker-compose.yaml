@@ -1,0 +1,40 @@
+version: '3.9'
+services:
+  mysql:
+    image: mysql:8.0.28
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "mysql"
+      MYSQL_DATABASE: "passbolt"
+      MYSQL_USER: "passbolt"
+      MYSQL_PASSWORD: "passbolt"
+    volumes:
+    - mysql_volume:/var/lib/mysql
+  
+  passbolt:
+    image: passbolt/passbolt:3.5.0-ce
+    restart: unless-stopped
+    depends_on:
+    - mysql
+    environment:
+      APP_FULL_BASE_URL: http://localhost
+      DATASOURCES_DEFAULT_HOST: "mysql"
+      DATASOURCES_DEFAULT_USERNAME: "passbolt"
+      DATASOURCES_DEFAULT_PASSWORD: "passbolt"
+      DATASOURCES_DEFAULT_DATABASE: "passbolt"
+      PASSBOLT_REGISTRATION_PUBLIC: "false"
+      EMAIL_TRANSPORT_DEFAULT_HOST: "smtp.eu.mailgun.org"
+      EMAIL_TRANSPORT_DEFAULT_PORT: "587"
+      EMAIL_TRANSPORT_DEFAULT_USERNAME: ""
+      EMAIL_TRANSPORT_DEFAULT_PASSWORD: ""
+      EMAIL_TRANSPORT_DEFAULT_TLS: "null"
+    volumes:
+    - passbolt_gpg_volume:/etc/passbolt/gpg
+    - passbolt_jwt_volume:/etc/passbolt/jwt
+    command: ["/usr/bin/wait-for.sh", "-t", "0", "mysql:3306", "--", "/docker-entrypoint.sh"]
+    # Internal port is 80
+
+volumes:
+  mysql_volume:
+  passbolt_gpg_volume:
+  passbolt_jwt_volume:
